@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloom Tasks - Modern Daily Checklist</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --pastel-mint: #e0f7fa;
+            --pastel-lavender: #f3e5f5;
+            --pastel-peach: #ffe0b2;
+            --pastel-blue: #e3f2fd;
+            --pastel-green: #e8f5e9;
+            --pastel-pink: #fce4ec;
+            --text-dark: #37474f;
+            --text-light: #546e7a;
+            --shadow-soft: 0 8px 25px rgba(0, 0, 0, 0.08);
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --radius-lg: 20px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        /* Header */
+        header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .app-title {
+            font-size: 3.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #81c784, #64b5f6, #ba68c8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .app-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            font-weight: 400;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow-soft);
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-soft), 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-light);
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 1.4rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 8px 0;
+            color: var(--text-dark);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* Progress */
+        .progress-section {
+            margin-top: 10px;
+        }
+
+        .progress-container {
+            background: rgba(0, 0, 0, 0.05);
+            height: 10px;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #81c784, #4db6ac);
+            width: 0%;
+            transition: var(--transition);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* Checklist */
+        .task-input-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            background: var(--pastel-blue);
+            padding: 20px;
+            border-radius: var(--radius-md);
+        }
+
+        .task-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: var(--transition);
+            background: white;
+            box-shadow: var(--shadow-light);
+        }
+
+        .task-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.3);
+        }
+
+        .time-input-container {
+            position: relative;
+            width: 140px;
+        }
+
+        .time-input {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: var(--transition);
+            background: white;
+            box-shadow: var(--shadow-light);
+            text-align: center;
+        }
+
+        .time-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.3);
+        }
+
+        .clock-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64b5f6;
+            font-size: 1.1rem;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #81c784, #4db6ac);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 0 25px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(129, 199, 132, 0.4);
+        }
+
+        /* Task List */
+        .task-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .task-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .task-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        .task-list::-webkit-scrollbar-thumb {
+            background: #b0bec5;
+            border-radius: 10px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 18px;
+            margin-bottom: 12px;
+            background: white;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+            box-shadow: var(--shadow-light);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            animation: taskAppear 0.4s ease-out;
+        }
+
+        @keyframes taskAppear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .task-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-checkbox {
+            width: 22px;
+            height: 22px;
+            margin-right: 15px;
+            cursor: pointer;
+            accent-color: #81c784;
+            transform: scale(1.2);
+        }
+
+        .task-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .task-text {
+            font-size: 1.05rem;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #90a4ae;
+        }
+
+        .task-time {
+            font-size: 0.85rem;
+            color: #64b5f6;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .task-item:hover .task-actions {
+            opacity: 1;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-light);
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-dark);
+        }
+
+        .edit-btn:hover {
+            background: rgba(100, 181, 246, 0.1);
+            color: #64b5f6;
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 83, 80, 0.1);
+            color: #ef5350;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+            color: #b0bec5;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        /* Right Sidebar */
+        .insights {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .time-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .time-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-light);
+            transition: var(--transition);
+        }
+
+        .time-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .time-card i {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #64b5f6;
+        }
+
+        .time-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 8px 0;
+            color: var(--text-dark);
+        }
+
+        .time-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* PDF Button */
+        .pdf-btn {
+            background: linear-gradient(135deg, #ba68c8, #ab47bc);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-light);
+            margin-top: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .pdf-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(186, 104, 200, 0.4);
+        }
+
+        /* Color Variants */
+        .mint-bg { background: var(--pastel-mint); }
+        .lavender-bg { background: var(--pastel-lavender); }
+        .peach-bg { background: var(--pastel-peach); }
+        .blue-bg { background: var(--pastel-blue); }
+        .green-bg { background: var(--pastel-green); }
+        .pink-bg { background: var(--pastel-pink); }
+
+        .mint-color { color: #4db6ac; }
+        .lavender-color { color: #ba68c8; }
+        .peach-color { color: #ff8a65; }
+        .blue-color { color: #64b5f6; }
+        .green-color { color: #81c784; }
+        .pink-color { color: #f06292; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid, .time-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .task-input-container {
+                flex-direction: column;
+            }
+            
+            .time-input-container {
+                width: 100%;
+            }
+            
+            .app-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* Floating Animation */
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% { transform: translate(0, 0px); }
+            50% { transform: translate(0, 8px); }
+            100% { transform: translate(0, -0px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="app-title floating">Bloom Tasks</h1>
+            <p class="app-subtitle">Your beautiful daily companion for productivity</p>
+        </header>
+        
+        <!-- Dashboard -->
+        <div class="dashboard card">
+            <div class="card-header">
+                <div class="card-icon mint-bg mint-color">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h2 class="card-title">Dashboard</h2>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card floating" style="animation-delay: 0.1s">
+                    <div class="stat-icon mint-bg mint-color">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-value" id="totalTasks">0</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+                <div class="stat-card floating" style="animation-delay: 0.2s">
+                    <div class="stat-icon green-bg green-color">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-value" id="completedTasks">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card floating" style="animation-delay: 0.3s">
+                    <div class="stat-icon blue-bg blue-color">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-value" id="totalTime">0h</div>
+                    <div class="stat-label">Total Time</div>
+                </div>
+                <div class="stat-card floating" style="animation-delay: 0.4s">
+                    <div class="stat-icon peach-bg peach-color">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <div class="stat-value" id="remainingTime">0h</div>
+                    <div class="stat-label">Remaining Time</div>
+                </div>
+            </div>
+            
+            <div class="progress-section">
+                <h3>Today's Progress</h3>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="progress-info">
+                    <span>Completion</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Checklist -->
+        <div class="checklist card">
+            <div class="card-header">
+                <div class="card-icon lavender-bg lavender-color">
+                    <i class="fas fa-list-check"></i>
+                </div>
+                <h2 class="card-title">Today's Tasks</h2>
+            </div>
+            
+            <div class="task-input-container">
+                <input type="text" class="task-input" id="taskInput" placeholder="What would you like to accomplish today?">
+                <div class="time-input-container">
+                    <input type="number" class="time-input" id="timeInput" placeholder="Time" min="0.5" step="0.5" value="1">
+                    <i class="fas fa-clock clock-icon"></i>
+                </div>
+                <button class="add-btn" id="addTaskBtn">
+                    <i class="fas fa-plus"></i> Add
+                </button>
+            </div>
+            
+            <div class="task-list" id="taskList">
+                <!-- Tasks will be added here dynamically -->
+            </div>
+        </div>
+        
+        <!-- Insights -->
+        <div class="insights card">
+            <div class="card-header">
+                <div class="card-icon pink-bg pink-color">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2 class="card-title">Insights</h2>
+            </div>
+            
+            <div class="time-cards">
+                <div class="time-card floating" style="animation-delay: 0.1s">
+                    <i class="fas fa-play-circle blue-color"></i>
+                    <div class="time-value" id="estimatedTime">0h</div>
+                    <div class="time-label">Estimated</div>
+                </div>
+                <div class="time-card floating" style="animation-delay: 0.2s">
+                    <i class="fas fa-check-circle green-color"></i>
+                    <div class="time-value" id="completedTime">0h</div>
+                    <div class="time-label">Completed</div>
+                </div>
+                <div class="time-card floating" style="animation-delay: 0.3s">
+                    <i class="fas fa-stopwatch peach-color"></i>
+                    <div class="time-value" id="remainingTimeCard">0h</div>
+                    <div class="time-label">Remaining</div>
+                </div>
+                <div class="time-card floating" style="animation-delay: 0.4s">
+                    <i class="fas fa-bolt lavender-color"></i>
+                    <div class="time-value" id="efficiency">0%</div>
+                    <div class="time-label">Efficiency</div>
+                </div>
+            </div>
+            
+            <button class="pdf-btn" id="pdfBtn">
+                <i class="fas fa-file-pdf"></i> Export to PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const taskInput = document.getElementById('taskInput');
+        const timeInput = document.getElementById('timeInput');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const taskList = document.getElementById('taskList');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const totalTasksEl = document.getElementById('totalTasks');
+        const completedTasksEl = document.getElementById('completedTasks');
+        const totalTimeEl = document.getElementById('totalTime');
+        const remainingTimeEl = document.getElementById('remainingTime');
+        const estimatedTimeEl = document.getElementById('estimatedTime');
+        const completedTimeEl = document.getElementById('completedTime');
+        const remainingTimeCardEl = document.getElementById('remainingTimeCard');
+        const efficiencyEl = document.getElementById('efficiency');
+        const pdfBtn = document.getElementById('pdfBtn');
+
+        // Initialize tasks array
+        let tasks = JSON.parse(localStorage.getItem('bloomTasks')) || [];
+
+        // Format time for display
+        function formatTime(hours) {
+            if (hours === 0) return "0h";
+            if (hours < 1) return `${Math.round(hours * 60)}m`;
+            if (hours % 1 === 0) return `${hours}h`;
+            const wholeHours = Math.floor(hours);
+            const minutes = Math.round((hours - wholeHours) * 60);
+            return `${wholeHours}h ${minutes}m`;
+        }
+
+        // Update dashboard stats
+        function updateDashboard() {
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(task => task.completed).length;
+            const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+            
+            // Calculate time statistics
+            const totalTime = tasks.reduce((sum, task) => sum + task.time, 0);
+            const completedTime = tasks
+                .filter(task => task.completed)
+                .reduce((sum, task) => sum + task.time, 0);
+            const remainingTime = totalTime - completedTime;
+            const efficiency = totalTime > 0 ? (completedTime / totalTime) * 100 : 0;
+            
+            // Update progress bar
+            progressBar.style.width = `${progress}%`;
+            progressPercent.textContent = `${Math.round(progress)}%`;
+            
+            // Update stats
+            totalTasksEl.textContent = totalTasks;
+            completedTasksEl.textContent = completedTasks;
+            totalTimeEl.textContent = formatTime(totalTime);
+            remainingTimeEl.textContent = formatTime(remainingTime);
+            
+            // Update time cards
+            estimatedTimeEl.textContent = formatTime(totalTime);
+            completedTimeEl.textContent = formatTime(completedTime);
+            remainingTimeCardEl.textContent = formatTime(remainingTime);
+            efficiencyEl.textContent = `${Math.round(efficiency)}%`;
+        }
+
+        // Render tasks
+        function renderTasks() {
+            taskList.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-seedling"></i>
+                        <h3>No tasks yet</h3>
+                        <p>Add your first task to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            tasks.forEach((task, index) => {
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                taskItem.innerHTML = `
+                    <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''}>
+                    <div class="task-content">
+                        <span class="task-text ${task.completed ? 'completed' : ''}">${task.text}</span>
+                        <span class="task-time"><i class="far fa-clock"></i> Estimated: ${formatTime(task.time)}</span>
+                    </div>
+                    <div class="task-actions">
+                        <button class="icon-btn edit-btn"><i class="fas fa-edit"></i></button>
+                        <button class="icon-btn delete-btn"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                
+                // Add event listeners
+                const checkbox = taskItem.querySelector('.task-checkbox');
+                const editBtn = taskItem.querySelector('.edit-btn');
+                const deleteBtn = taskItem.querySelector('.delete-btn');
+                const taskText = taskItem.querySelector('.task-text');
+                
+                checkbox.addEventListener('change', () => {
+                    tasks[index].completed = checkbox.checked;
+                    taskText.classList.toggle('completed', checkbox.checked);
+                    saveTasks();
+                    updateDashboard();
+                    
+                    // Add visual feedback for completion
+                    if (checkbox.checked) {
+                        taskItem.style.background = 'var(--pastel-green)';
+                        setTimeout(() => {
+                            taskItem.style.background = 'white';
+                        }, 500);
+                    }
+                });
+                
+                editBtn.addEventListener('click', () => {
+                    const newText = prompt('Edit task:', tasks[index].text);
+                    if (newText !== null && newText.trim() !== '') {
+                        const newTime = parseFloat(prompt('Edit time (in hours):', tasks[index].time));
+                        if (!isNaN(newTime) && newTime > 0) {
+                            tasks[index].text = newText.trim();
+                            tasks[index].time = newTime;
+                            taskText.textContent = newText.trim();
+                            taskItem.querySelector('.task-time').innerHTML = `<i class="far fa-clock"></i> Estimated: ${formatTime(newTime)}`;
+                            saveTasks();
+                            updateDashboard();
+                        }
+                    }
+                });
+                
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to delete this task?')) {
+                        taskItem.style.animation = 'taskAppear 0.3s ease-out reverse';
+                        setTimeout(() => {
+                            tasks.splice(index, 1);
+                            saveTasks();
+                            renderTasks();
+                            updateDashboard();
+                        }, 300);
+                    }
+                });
+                
+                taskList.appendChild(taskItem);
+            });
+        }
+
+        // Add new task
+        function addTask() {
+            const text = taskInput.value.trim();
+            const time = parseFloat(timeInput.value);
+            
+            if (text === '' || isNaN(time) || time <= 0) {
+                alert('Please enter a valid task and time estimate (at least 0.5 hours)');
+                return;
+            }
+            
+            tasks.push({
+                text: text,
+                time: time,
+                completed: false,
+                createdAt: new Date().toISOString()
+            });
+            
+            taskInput.value = '';
+            timeInput.value = '1';
+            saveTasks();
+            renderTasks();
+            updateDashboard();
+            
+            // Add visual feedback
+            const newTask = taskList.lastChild;
+            if (newTask) {
+                newTask.style.animation = 'taskAppear 0.5s ease-out';
+            }
+        }
+
+        // Save tasks to localStorage
+        function saveTasks() {
+            localStorage.setItem('bloomTasks', JSON.stringify(tasks));
+        }
+
+        // Generate PDF
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(20);
+            doc.setTextColor(81, 199, 132);
+            doc.text('Bloom Tasks Report', 20, 20);
+            
+            // Add date
+            doc.setFontSize(12);
+            doc.setTextColor(84, 110, 122);
+            const now = new Date();
+            doc.text(`Generated on: ${now.toLocaleDateString()}`, 20, 30);
+            
+            // Add statistics
+            doc.setFontSize(16);
+            doc.setTextColor(55, 71, 79);
+            doc.text('Summary', 20, 50);
+            
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(task => task.completed).length;
+            const totalTime = tasks.reduce((sum, task) => sum + task.time, 0);
+            const completedTime = tasks
+                .filter(task => task.completed)
+                .reduce((sum, task) => sum + task.time, 0);
+            
+            doc.setFontSize(12);
+            doc.text(`Total Tasks: ${totalTasks}`, 20, 65);
+            doc.text(`Completed: ${completedTasks}`, 20, 75);
+            doc.text(`Total Time: ${formatTime(totalTime)}`, 20, 85);
+            doc.text(`Completed Time: ${formatTime(completedTime)}`, 20, 95);
+            
+            // Add tasks
+            let yPosition = 120;
+            doc.setFontSize(16);
+            doc.text('Tasks', 20, yPosition);
+            yPosition += 10;
+            
+            doc.setFontSize(10);
+            tasks.forEach((task, index) => {
+                if (yPosition > 270) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                const status = task.completed ? '✓ Completed' : '○ Pending';
+                doc.text(`${index + 1}. ${task.text}`, 25, yPosition);
+                doc.text(`Time: ${formatTime(task.time)} | Status: ${status}`, 25, yPosition + 5);
+                yPosition += 15;
+            });
+            
+            // Save the PDF
+            doc.save('bloom-tasks-report.pdf');
+        }
+
+        // Event listeners
+        addTaskBtn.addEventListener('click', addTask);
+        
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        pdfBtn.addEventListener('click', generatePDF);
+
+        // Initialize the app
+        renderTasks();
+        updateDashboard();
+    </script>
+</body>
+</html>
